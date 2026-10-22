@@ -16,11 +16,13 @@ import {
   LogOut,
   PhoneCall,
   Sparkles,
-  HeartHandshake
+  HeartHandshake,
+  ShieldAlert,
 } from 'lucide-react';
 import { useAuth } from '@/lib/context/AuthContext';
 import NotificationBell from '@/components/common/NotificationBell';
 import LocationSelector from '@/components/layout/LocationSelector';
+import EmergencySosModal from '@/components/common/EmergencySosModal';
 import Button from '@/components/ui/Button';
 import Badge from '@/components/ui/Badge';
 
@@ -28,6 +30,7 @@ export default function Navbar() {
   const { user, logout } = useAuth();
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const [profileDropdownOpen, setProfileDropdownOpen] = useState(false);
+  const [sosModalOpen, setSosModalOpen] = useState(false);
   const [selectedCity, setSelectedCity] = useState('New Delhi');
   const [searchQuery, setSearchQuery] = useState('');
   const pathname = usePathname();
@@ -156,6 +159,16 @@ export default function Navbar() {
             >
               Categories
             </Link>
+
+            {/* 24x7 Emergency SOS 1-Tap Trigger */}
+            <button
+              type="button"
+              onClick={() => setSosModalOpen(true)}
+              className="flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-red-50 text-red-600 border border-red-200 text-xs font-black hover:bg-red-600 hover:text-white transition shadow-2xs"
+            >
+              <ShieldAlert className="w-3.5 h-3.5 text-red-500 animate-pulse" />
+              <span>SOS</span>
+            </button>
 
             {/* Auth Dropdown or Login Button */}
             {user ? (
@@ -301,6 +314,17 @@ export default function Navbar() {
           </div>
 
           <div className="space-y-1">
+            <button
+              type="button"
+              onClick={() => {
+                setMobileMenuOpen(false);
+                setSosModalOpen(true);
+              }}
+              className="w-full flex items-center justify-center gap-2 py-2.5 rounded-xl bg-red-600 text-white text-xs font-black shadow-md mb-2"
+            >
+              <ShieldAlert className="w-4 h-4 animate-pulse" />
+              <span>1-Tap Emergency SOS (15-min Dispatch)</span>
+            </button>
             <Link
               href="/services"
               className="block px-3 py-2 rounded-lg text-base font-semibold text-slate-800 hover:bg-slate-50"
@@ -354,6 +378,12 @@ export default function Navbar() {
           )}
         </div>
       )}
+
+      {/* 24x7 Emergency SOS Dispatch Modal */}
+      <EmergencySosModal
+        isOpen={sosModalOpen}
+        onClose={() => setSosModalOpen(false)}
+      />
     </header>
   );
 }

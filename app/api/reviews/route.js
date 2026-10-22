@@ -2,6 +2,39 @@ import { query, queryOne } from '@/lib/db';
 import { getAuthUser } from '@/lib/auth';
 import { apiSuccess, apiError } from '@/lib/utils';
 
+export const dynamic = 'force-dynamic';
+
+export async function GET(request) {
+  try {
+    const { searchParams } = new URL(request.url);
+    const serviceId = searchParams.get('service_id');
+    const userId = searchParams.get('user_id');
+
+    let sql = `SELECT r.*, u.name as user_name, u.city as user_city, s.title as service_title
+               FROM reviews r
+               JOIN users u ON r.user_id = u.id
+               JOIN services s ON r.service_id = s.id
+               WHERE r.status = 'approved'`;
+    const params = [];
+
+    if (serviceId) {
+      sql += ' AND r.service_id = ?';
+      params.push(serviceId);
+    }
+    if (userId) {
+      sql += ' AND r.user_id = ?';
+      params.push(userId);
+    }
+    sql += ' ORDER BY r.id DESC LIMIT 20';
+
+    const reviews = await query(sql, params);
+    return apiSuccess({ reviews });
+  } catch (error) {
+    console.error('Fetch reviews error:', error);
+    return apiError('Failed to fetch reviews', 500);
+  }
+}
+
 export async function POST(request) {
   try {
     const user = getAuthUser(request);

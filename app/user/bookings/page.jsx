@@ -13,6 +13,8 @@ import {
   MessageSquare,
   Search,
   KeyRound,
+  Navigation,
+  ShieldCheck,
 } from 'lucide-react';
 import DashboardLayout from '@/components/layout/DashboardLayout';
 import Card from '@/components/ui/Card';
@@ -24,6 +26,8 @@ import Textarea from '@/components/ui/Textarea';
 import { useToast } from '@/components/ui/Toast';
 import { useAuth } from '@/lib/context/AuthContext';
 import BookingChatModal from '@/components/common/BookingChatModal';
+import LiveTrackingModal from '@/components/common/LiveTrackingModal';
+import WarrantyClaimModal from '@/components/common/WarrantyClaimModal';
 import { formatCurrency, formatDate } from '@/lib/utils';
 
 export default function UserBookingsPage() {
@@ -50,6 +54,14 @@ export default function UserBookingsPage() {
   const [selectedBookingForCancel, setSelectedBookingForCancel] = useState(null);
   const [cancelReason, setCancelReason] = useState('');
   const [cancelSubmitting, setCancelSubmitting] = useState(false);
+
+  // Live tracking modal state
+  const [trackingModalOpen, setTrackingModalOpen] = useState(false);
+  const [trackingBooking, setTrackingBooking] = useState(null);
+
+  // 30-Day Guarantee warranty modal state
+  const [warrantyModalOpen, setWarrantyModalOpen] = useState(false);
+  const [warrantyBooking, setWarrantyBooking] = useState(null);
 
   const fetchBookings = useCallback(async () => {
     setLoading(true);
@@ -290,6 +302,38 @@ export default function UserBookingsPage() {
                         </Button>
                       </Link>
 
+                      {/* Live GPS Track Button for Active Bookings */}
+                      {!isCancelled && !isCompleted && (
+                        <Button
+                          variant="outline"
+                          size="sm"
+                          icon={Navigation}
+                          className="text-brand-royal border-blue-300 bg-blue-50/60 hover:bg-blue-100/60"
+                          onClick={() => {
+                            setTrackingBooking(b);
+                            setTrackingModalOpen(true);
+                          }}
+                        >
+                          Live Track
+                        </Button>
+                      )}
+
+                      {/* 30-Day Free Rework Guarantee Claim for Completed Bookings */}
+                      {isCompleted && (
+                        <Button
+                          variant="outline"
+                          size="sm"
+                          icon={ShieldCheck}
+                          className="text-emerald-700 border-emerald-300 bg-emerald-50/60 hover:bg-emerald-100/60"
+                          onClick={() => {
+                            setWarrantyBooking(b);
+                            setWarrantyModalOpen(true);
+                          }}
+                        >
+                          Claim Guarantee
+                        </Button>
+                      )}
+
                       {!isCancelled && (
                         <Button
                           variant="outline"
@@ -460,6 +504,25 @@ export default function UserBookingsPage() {
         bookingId={chatBooking?.id}
         bookingNumber={chatBooking?.booking_number}
         currentUserId={user?.id}
+      />
+
+      {/* LIVE ROUTE & GPS TRACKING MODAL */}
+      <LiveTrackingModal
+        isOpen={trackingModalOpen}
+        onClose={() => setTrackingModalOpen(false)}
+        booking={trackingBooking}
+        onOpenChat={(b) => {
+          setChatBooking(b);
+          setChatModalOpen(true);
+        }}
+      />
+
+      {/* 30-DAY FREE REWORK GUARANTEE MODAL */}
+      <WarrantyClaimModal
+        isOpen={warrantyModalOpen}
+        onClose={() => setWarrantyModalOpen(false)}
+        booking={warrantyBooking}
+        onSuccess={() => fetchBookings()}
       />
 
     </DashboardLayout>

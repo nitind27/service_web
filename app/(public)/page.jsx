@@ -25,6 +25,7 @@ import Button from '@/components/ui/Button';
 import Card from '@/components/ui/Card';
 import Badge from '@/components/ui/Badge';
 import RatingStars from '@/components/ui/RatingStars';
+import SmartServiceWizard from '@/components/home/SmartServiceWizard';
 import { query } from '@/lib/db';
 import { formatCurrency } from '@/lib/utils';
 
@@ -173,7 +174,12 @@ export default async function HomePage() {
         </div>
       </section>
 
-      {/* 2. 10 LIFE STAGES CATEGORIES SECTION */}
+      {/* 2. AI SMART PROBLEM DIAGNOSTIC WIZARD (JEEVAN MITRA) */}
+      <section className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 -mt-6 sm:-mt-10 relative z-20">
+        <SmartServiceWizard />
+      </section>
+
+      {/* 3. 10 LIFE STAGES CATEGORIES SECTION */}
       <section className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="flex flex-col sm:flex-row items-start sm:items-end justify-between gap-4 mb-8">
           <div>
