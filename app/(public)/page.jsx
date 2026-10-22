@@ -26,6 +26,7 @@ import Card from '@/components/ui/Card';
 import Badge from '@/components/ui/Badge';
 import RatingStars from '@/components/ui/RatingStars';
 import SmartServiceWizard from '@/components/home/SmartServiceWizard';
+import PromoBannerSlider from '@/components/home/PromoBannerSlider';
 import { query } from '@/lib/db';
 import { formatCurrency } from '@/lib/utils';
 
@@ -45,6 +46,10 @@ const ICON_MAP = {
 
 async function getHomePageData() {
   try {
+    const banners = await query(
+      `SELECT * FROM banners WHERE status = 'active' ORDER BY sort_order ASC, id DESC`
+    );
+
     const categories = await query(
       `SELECT c.*, 
         (SELECT COUNT(*) FROM services s WHERE s.category_id = c.id AND s.status = 'active') as services_count
@@ -70,15 +75,15 @@ async function getHomePageData() {
       `SELECT * FROM faqs WHERE status = 'active' ORDER BY sort_order ASC LIMIT 6`
     );
 
-    return { categories, featuredServices, testimonials, faqs };
+    return { banners, categories, featuredServices, testimonials, faqs };
   } catch (err) {
     console.error('Error fetching home page data:', err);
-    return { categories: [], featuredServices: [], testimonials: [], faqs: [] };
+    return { banners: [], categories: [], featuredServices: [], testimonials: [], faqs: [] };
   }
 }
 
 export default async function HomePage() {
-  const { categories, featuredServices, testimonials, faqs } = await getHomePageData();
+  const { banners, categories, featuredServices, testimonials, faqs } = await getHomePageData();
 
   const popularPills = [
     { label: 'Deep Cleaning', query: 'Deep Cleaning', icon: '🧹' },
@@ -267,6 +272,13 @@ export default async function HomePage() {
       <section className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 -mt-6 sm:-mt-10 relative z-20">
         <SmartServiceWizard />
       </section>
+
+      {/* 2.5 WORK-RELATED PROMO BANNERS & SEASONAL SLIDER */}
+      {banners && banners.length > 0 && (
+        <section className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+          <PromoBannerSlider initialBanners={banners} />
+        </section>
+      )}
 
       {/* 3. 10 LIFE STAGES CATEGORIES SECTION */}
       <section className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
@@ -608,6 +620,16 @@ export default async function HomePage() {
       {/* 8. PARTNER CTA BANNER */}
       <section className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="bg-gradient-to-r from-brand-royal via-blue-900 to-indigo-950 rounded-3xl p-8 sm:p-12 text-white relative overflow-hidden shadow-elevated">
+          {/* Work-related background image overlay on the right */}
+          <div className="absolute right-0 top-0 bottom-0 w-full sm:w-1/2 opacity-25 sm:opacity-35 pointer-events-none mix-blend-luminosity">
+            <img
+              src="https://images.unsplash.com/photo-1621905251189-08b45d6a269e?w=1200&auto=format&fit=crop&q=80"
+              alt="Professional Technician Partner"
+              className="w-full h-full object-cover object-center"
+            />
+            <div className="absolute inset-0 bg-gradient-to-r from-brand-royal via-blue-900/80 to-transparent" />
+          </div>
+
           <div className="max-w-2xl space-y-4 relative z-10">
             <span className="text-xs font-bold uppercase tracking-wider text-amber-300 bg-amber-950/60 px-3 py-1 rounded-full border border-amber-500/30">
               Partner With JeevanSeva
