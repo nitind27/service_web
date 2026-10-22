@@ -16,6 +16,7 @@ import Button from '@/components/ui/Button';
 import Badge from '@/components/ui/Badge';
 import Modal from '@/components/ui/Modal';
 import Select from '@/components/ui/Select';
+import Pagination from '@/components/ui/Pagination';
 import { useToast } from '@/components/ui/Toast';
 import { formatCurrency, formatDate } from '@/lib/utils';
 
@@ -26,6 +27,10 @@ export default function SubAdminBookingsPage() {
   const [loading, setLoading] = useState(true);
   const [searchQuery, setSearchQuery] = useState('');
   const [statusFilter, setStatusFilter] = useState('all');
+  const [page, setPage] = useState(1);
+  const [totalPages, setTotalPages] = useState(1);
+  const [totalCount, setTotalCount] = useState(0);
+  const pageSize = 10;
 
   // Assign modal state
   const [assignModalOpen, setAssignModalOpen] = useState(false);
@@ -33,20 +38,29 @@ export default function SubAdminBookingsPage() {
   const [selectedProviderId, setSelectedProviderId] = useState('');
   const [submitting, setSubmitting] = useState(false);
 
-  const fetchBookings = useCallback(async () => {
+  const fetchBookings = useCallback(async (targetPage = page, status = statusFilter, query = searchQuery) => {
     setLoading(true);
     try {
-      const res = await fetch('/api/bookings?limit=50');
+      const params = new URLSearchParams({
+        page: String(targetPage),
+        limit: String(pageSize),
+      });
+      if (status && status !== 'all') params.append('status', status);
+      if (query && query.trim()) params.append('q', query.trim());
+
+      const res = await fetch(`/api/bookings?${params.toString()}`);
       const data = await res.json();
       if (data.success) {
         setBookings(data.data.bookings || []);
+        setTotalPages(data.meta?.totalPages || data.data?.totalPages || 1);
+        setTotalCount(data.meta?.total || data.data?.total || 0);
       }
     } catch (err) {
       console.error(err);
     } finally {
       setLoading(false);
     }
-  }, []);
+  }, [page, statusFilter, searchQuery, pageSize]);
 
   const fetchProviders = async () => {
     try {
@@ -65,8 +79,11 @@ export default function SubAdminBookingsPage() {
 
   useEffect(() => {
     fetchBookings();
-    fetchProviders();
   }, [fetchBookings]);
+
+  useEffect(() => {
+    fetchProviders();
+  }, []);
 
   const handleAssignProvider = async () => {
     if (!selectedBooking || !selectedProviderId) return;
@@ -96,18 +113,6 @@ export default function SubAdminBookingsPage() {
     }
   };
 
-  const filteredBookings = bookings.filter((b) => {
-    if (statusFilter !== 'all' && b.booking_status !== statusFilter) return false;
-    if (searchQuery.trim()) {
-      const q = searchQuery.toLowerCase();
-      const matchNum = b.booking_number?.toLowerCase().includes(q);
-      const matchCust = b.customer_name?.toLowerCase().includes(q);
-      const matchService = b.service_title?.toLowerCase().includes(q);
-      if (!matchNum && !matchCust && !matchService) return false;
-    }
-    return true;
-  });
-
   return (
     <DashboardLayout title="Operations: Manage Bookings">
       <div className="space-y-6">
@@ -117,7 +122,10 @@ export default function SubAdminBookingsPage() {
           <div className="flex items-center gap-3">
             <select
               value={statusFilter}
-              onChange={(e) => setStatusFilter(e.target.value)}
+              onChange={(e) => {
+                setStatusFilter(e.target.value);
+                setPage(1);
+              }}
               className="bg-white border border-slate-200 text-xs font-bold text-slate-800 rounded-xl px-3 py-2 shadow-xs outline-none"
             >
               <option value="all">All Statuses</option>
@@ -128,6 +136,7 @@ export default function SubAdminBookingsPage() {
               <option value="completed">Completed</option>
               <option value="cancelled">Cancelled</option>
             </select>
+            <span className="text-xs text-slate-500 font-semibold">Total: {totalCount}</span>
           </div>
 
           <div className="relative w-full sm:w-72">
@@ -135,7 +144,10 @@ export default function SubAdminBookingsPage() {
               type="text"
               placeholder="Search by ID, customer, service..."
               value={searchQuery}
-              onChange={(e) => setSearchQuery(e.target.value)}
+              onChange={(e) => {
+                setSearchQuery(e.target.value);
+                setPage(1);
+              }}
               className="w-full text-xs bg-white border border-slate-200 rounded-xl px-3 py-2 pl-8 outline-none focus:border-brand-royal"
             />
             <Search className="w-3.5 h-3.5 text-slate-400 absolute left-2.5 top-2.5" />
@@ -148,7 +160,7 @@ export default function SubAdminBookingsPage() {
             <div className="text-center py-16 text-xs text-slate-500 font-semibold">
               Loading bookings...
             </div>
-          ) : filteredBookings.length === 0 ? (
+          ) : bookings.length === 0 ? (
             <div className="text-center py-12 text-xs text-slate-500">No bookings found.</div>
           ) : (
             <div className="overflow-x-auto">
@@ -166,7 +178,7 @@ export default function SubAdminBookingsPage() {
                   </tr>
                 </thead>
                 <tbody className="divide-y divide-slate-100">
-                  {filteredBookings.map((b) => (
+                  {bookings.map((b) => (
                     <tr key={b.id} className="hover:bg-slate-50/60 transition">
                       <td className="p-4 font-bold text-brand-royal whitespace-nowrap">
                         {b.booking_number}
@@ -221,6 +233,14 @@ export default function SubAdminBookingsPage() {
               </table>
             </div>
           )}
+
+          <Pagination
+            currentPage={page}
+            totalPages={totalPages}
+            totalItems={totalCount}
+            pageSize={pageSize}
+            onPageChange={(p) => setPage(p)}
+          />
         </div>
 
       </div>

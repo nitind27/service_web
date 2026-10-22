@@ -37,8 +37,14 @@ export async function GET(request) {
 
     // Status filter
     if (status && status !== 'all') {
-      whereSql += ' AND b.booking_status = ?';
-      params.push(status);
+      if (status === 'active') {
+        whereSql += " AND b.booking_status IN ('pending', 'confirmed', 'assigned', 'in_progress')";
+      } else if (status === 'assigned') {
+        whereSql += " AND b.booking_status IN ('pending', 'confirmed', 'assigned')";
+      } else {
+        whereSql += ' AND b.booking_status = ?';
+        params.push(status);
+      }
     }
 
     // Search query
@@ -77,12 +83,14 @@ export async function GET(request) {
 
     const bookings = await query(dataSql, [...params, limit, offset]);
 
-    return apiSuccess({ bookings }, 'Bookings retrieved successfully', 200, {
+    const meta = {
       page,
       limit,
       total,
       totalPages: Math.ceil(total / limit) || 1,
-    });
+    };
+
+    return apiSuccess({ bookings, ...meta }, 'Bookings retrieved successfully', 200, meta);
   } catch (error) {
     console.error('Fetch bookings error:', error);
     return apiError('Failed to fetch bookings', 500);

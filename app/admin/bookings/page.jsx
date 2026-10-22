@@ -20,6 +20,7 @@ import Button from '@/components/ui/Button';
 import Badge from '@/components/ui/Badge';
 import Modal from '@/components/ui/Modal';
 import Select from '@/components/ui/Select';
+import Pagination from '@/components/ui/Pagination';
 import { useToast } from '@/components/ui/Toast';
 import { useAuth } from '@/lib/context/AuthContext';
 import BookingChatModal from '@/components/common/BookingChatModal';
@@ -33,6 +34,10 @@ export default function AdminBookingsPage() {
   const [loading, setLoading] = useState(true);
   const [searchQuery, setSearchQuery] = useState('');
   const [statusFilter, setStatusFilter] = useState('all');
+  const [page, setPage] = useState(1);
+  const [totalPages, setTotalPages] = useState(1);
+  const [totalCount, setTotalCount] = useState(0);
+  const pageSize = 10;
 
   // Status & Provider assign modal
   const [modalOpen, setModalOpen] = useState(false);
@@ -45,20 +50,29 @@ export default function AdminBookingsPage() {
   const [chatModalOpen, setChatModalOpen] = useState(false);
   const [chatBooking, setChatBooking] = useState(null);
 
-  const fetchBookings = useCallback(async () => {
+  const fetchBookings = useCallback(async (targetPage = page, status = statusFilter, query = searchQuery) => {
     setLoading(true);
     try {
-      const res = await fetch('/api/bookings?limit=100');
+      const params = new URLSearchParams({
+        page: String(targetPage),
+        limit: String(pageSize),
+      });
+      if (status && status !== 'all') params.append('status', status);
+      if (query && query.trim()) params.append('q', query.trim());
+
+      const res = await fetch(`/api/bookings?${params.toString()}`);
       const data = await res.json();
       if (data.success) {
         setBookings(data.data.bookings || []);
+        setTotalPages(data.meta?.totalPages || data.data?.totalPages || 1);
+        setTotalCount(data.meta?.total || data.data?.total || 0);
       }
     } catch (err) {
       console.error(err);
     } finally {
       setLoading(false);
     }
-  }, []);
+  }, [page, statusFilter, searchQuery, pageSize]);
 
   const fetchProviders = async () => {
     try {
@@ -170,17 +184,7 @@ export default function AdminBookingsPage() {
     toast.success('Bookings report exported to CSV successfully!');
   };
 
-  const filtered = bookings.filter((b) => {
-    if (statusFilter !== 'all' && b.booking_status !== statusFilter) return false;
-    if (searchQuery.trim()) {
-      const q = searchQuery.toLowerCase();
-      const matchNum = b.booking_number?.toLowerCase().includes(q);
-      const matchCust = b.customer_name?.toLowerCase().includes(q);
-      const matchService = b.service_title?.toLowerCase().includes(q);
-      if (!matchNum && !matchCust && !matchService) return false;
-    }
-    return true;
-  });
+  const filtered = bookings;
 
   return (
     <DashboardLayout title="Master Bookings Management">
@@ -190,10 +194,13 @@ export default function AdminBookingsPage() {
           <div className="flex items-center gap-3">
             <select
               value={statusFilter}
-              onChange={(e) => setStatusFilter(e.target.value)}
+              onChange={(e) => {
+                setStatusFilter(e.target.value);
+                setPage(1);
+              }}
               className="bg-white border border-slate-200 text-xs font-bold text-slate-800 rounded-xl px-3 py-2 shadow-xs outline-none"
             >
-              <option value="all">All Bookings ({bookings.length})</option>
+              <option value="all">All Bookings ({totalCount})</option>
               <option value="pending">Pending</option>
               <option value="confirmed">Confirmed</option>
               <option value="assigned">Assigned</option>
@@ -218,7 +225,10 @@ export default function AdminBookingsPage() {
               type="text"
               placeholder="Search by ID, customer, service..."
               value={searchQuery}
-              onChange={(e) => setSearchQuery(e.target.value)}
+              onChange={(e) => {
+                setSearchQuery(e.target.value);
+                setPage(1);
+              }}
               className="w-full text-xs bg-white border border-slate-200 rounded-xl px-3 py-2 pl-8 outline-none focus:border-brand-royal"
             />
             <Search className="w-3.5 h-3.5 text-slate-400 absolute left-2.5 top-2.5" />
@@ -323,6 +333,15 @@ export default function AdminBookingsPage() {
               </tbody>
             </table>
           </div>
+
+          {/* Server-Side Pagination Bar */}
+          <Pagination
+            currentPage={page}
+            totalPages={totalPages}
+            totalItems={totalCount}
+            pageSize={pageSize}
+            onPageChange={(newPage) => setPage(newPage)}
+          />
         </div>
 
       </div>

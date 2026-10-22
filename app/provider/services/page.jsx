@@ -10,6 +10,7 @@ import Modal from '@/components/ui/Modal';
 import Input from '@/components/ui/Input';
 import Textarea from '@/components/ui/Textarea';
 import Select from '@/components/ui/Select';
+import Pagination from '@/components/ui/Pagination';
 import { useToast } from '@/components/ui/Toast';
 import { formatCurrency } from '@/lib/utils';
 
@@ -19,6 +20,10 @@ export default function ProviderServicesPage() {
   const [categories, setCategories] = useState([]);
   const [loading, setLoading] = useState(true);
   const [modalOpen, setModalOpen] = useState(false);
+  const [page, setPage] = useState(1);
+  const [totalPages, setTotalPages] = useState(1);
+  const [totalCount, setTotalCount] = useState(0);
+  const pageSize = 9;
 
   // New service form fields
   const [categoryId, setCategoryId] = useState('');
@@ -31,20 +36,24 @@ export default function ProviderServicesPage() {
   const [thumbnail, setThumbnail] = useState('https://images.unsplash.com/photo-1581578731548-c64695cc6952?w=600');
   const [submitting, setSubmitting] = useState(false);
 
-  const fetchServices = async () => {
+  const fetchServices = async (targetPage = page) => {
     setLoading(true);
     try {
       const [sRes, cRes] = await Promise.all([
-        fetch('/api/services?limit=50'),
+        fetch(`/api/services?page=${targetPage}&limit=${pageSize}`),
         fetch('/api/categories'),
       ]);
       const sData = await sRes.json();
       const cData = await cRes.json();
-      if (sData.success) setServices(sData.data.services || []);
+      if (sData.success) {
+        setServices(sData.data.services || []);
+        setTotalPages(sData.meta?.totalPages || sData.data?.totalPages || 1);
+        setTotalCount(sData.meta?.total || sData.data?.total || 0);
+      }
       if (cData.success) {
         setCategories(cData.data.categories || []);
         if (cData.data.categories?.length > 0) {
-          setCategoryId(String(cData.data.categories[0].id));
+          setCategoryId((prev) => prev || String(cData.data.categories[0].id));
         }
       }
     } catch (err) {
@@ -55,8 +64,8 @@ export default function ProviderServicesPage() {
   };
 
   useEffect(() => {
-    fetchServices();
-  }, []);
+    fetchServices(page);
+  }, [page]);
 
   const handleCreateService = async (e) => {
     e.preventDefault();
@@ -104,7 +113,7 @@ export default function ProviderServicesPage() {
         
         <div className="flex items-center justify-between">
           <div>
-            <h2 className="text-base font-bold text-slate-900">Manage Offered Services</h2>
+            <h2 className="text-base font-bold text-slate-900">Manage Offered Services ({totalCount})</h2>
             <p className="text-xs text-slate-500">Configure your rates, service descriptions, and packages.</p>
           </div>
           <Button variant="accent" size="sm" icon={Plus} onClick={() => setModalOpen(true)}>
@@ -155,6 +164,14 @@ export default function ProviderServicesPage() {
             ))}
           </div>
         )}
+
+        <Pagination
+          currentPage={page}
+          totalPages={totalPages}
+          totalItems={totalCount}
+          pageSize={pageSize}
+          onPageChange={(p) => setPage(p)}
+        />
 
       </div>
 

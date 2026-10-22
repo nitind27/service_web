@@ -89,16 +89,18 @@ export async function GET(request) {
     `;
     const items = await query(dataSql, [...params, limit, offset]);
 
+    const meta = {
+      page,
+      limit,
+      total,
+      totalPages: Math.ceil(total / limit) || 1,
+    };
+
     return apiSuccess(
-      { services: items },
+      { services: items, ...meta },
       'Services fetched successfully',
       200,
-      {
-        page,
-        limit,
-        total,
-        totalPages: Math.ceil(total / limit) || 1,
-      }
+      meta
     );
   } catch (error) {
     console.error('Fetch services error:', error);

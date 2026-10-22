@@ -23,6 +23,7 @@ import Modal from '@/components/ui/Modal';
 import Tabs from '@/components/ui/Tabs';
 import Textarea from '@/components/ui/Textarea';
 import Input from '@/components/ui/Input';
+import Pagination from '@/components/ui/Pagination';
 import { useToast } from '@/components/ui/Toast';
 import { useAuth } from '@/lib/context/AuthContext';
 import BookingChatModal from '@/components/common/BookingChatModal';
@@ -35,6 +36,10 @@ export default function ProviderBookingsPage() {
   const [loading, setLoading] = useState(true);
   const [activeTab, setActiveTab] = useState('all');
   const [searchQuery, setSearchQuery] = useState('');
+  const [page, setPage] = useState(1);
+  const [totalPages, setTotalPages] = useState(1);
+  const [totalCount, setTotalCount] = useState(0);
+  const pageSize = 10;
 
   // Start Job with OTP modal state
   const [startModalOpen, setStartModalOpen] = useState(false);
@@ -52,20 +57,29 @@ export default function ProviderBookingsPage() {
   const [chatModalOpen, setChatModalOpen] = useState(false);
   const [chatBooking, setChatBooking] = useState(null);
 
-  const fetchBookings = useCallback(async () => {
+  const fetchBookings = useCallback(async (targetPage = page, tab = activeTab, query = searchQuery) => {
     setLoading(true);
     try {
-      const res = await fetch('/api/bookings?limit=50');
+      const params = new URLSearchParams({
+        page: String(targetPage),
+        limit: String(pageSize),
+      });
+      if (tab && tab !== 'all') params.append('status', tab);
+      if (query && query.trim()) params.append('q', query.trim());
+
+      const res = await fetch(`/api/bookings?${params.toString()}`);
       const data = await res.json();
       if (data.success) {
         setBookings(data.data.bookings || []);
+        setTotalPages(data.meta?.totalPages || data.data?.totalPages || 1);
+        setTotalCount(data.meta?.total || data.data?.total || 0);
       }
     } catch (err) {
       console.error('Error fetching bookings:', err);
     } finally {
       setLoading(false);
     }
-  }, []);
+  }, [page, activeTab, searchQuery, pageSize]);
 
   useEffect(() => {
     fetchBookings();
@@ -136,21 +150,6 @@ export default function ProviderBookingsPage() {
     }
   };
 
-  const filteredBookings = bookings.filter((b) => {
-    if (activeTab === 'assigned' && !['assigned', 'confirmed', 'pending'].includes(b.booking_status)) return false;
-    if (activeTab === 'in_progress' && b.booking_status !== 'in_progress') return false;
-    if (activeTab === 'completed' && b.booking_status !== 'completed') return false;
-
-    if (searchQuery.trim()) {
-      const q = searchQuery.toLowerCase();
-      const matchNum = b.booking_number?.toLowerCase().includes(q);
-      const matchCust = b.customer_name?.toLowerCase().includes(q);
-      const matchService = b.service_title?.toLowerCase().includes(q);
-      if (!matchNum && !matchCust && !matchService) return false;
-    }
-    return true;
-  });
-
   return (
     <DashboardLayout title="Assigned Jobs & Work Orders">
       <div className="space-y-6">
@@ -159,25 +158,16 @@ export default function ProviderBookingsPage() {
         <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
           <Tabs
             tabs={[
-              { id: 'all', label: 'All Jobs', badge: bookings.length },
-              {
-                id: 'assigned',
-                label: 'To Do',
-                badge: bookings.filter((b) => ['assigned', 'confirmed', 'pending'].includes(b.booking_status)).length,
-              },
-              {
-                id: 'in_progress',
-                label: 'In Progress',
-                badge: bookings.filter((b) => b.booking_status === 'in_progress').length,
-              },
-              {
-                id: 'completed',
-                label: 'Completed',
-                badge: bookings.filter((b) => b.booking_status === 'completed').length,
-              },
+              { id: 'all', label: 'All Jobs' },
+              { id: 'assigned', label: 'To Do' },
+              { id: 'in_progress', label: 'In Progress' },
+              { id: 'completed', label: 'Completed' },
             ]}
             activeTab={activeTab}
-            onChange={(t) => setActiveTab(t)}
+            onChange={(t) => {
+              setActiveTab(t);
+              setPage(1);
+            }}
           />
 
           <div className="relative w-full sm:w-64">
@@ -185,7 +175,10 @@ export default function ProviderBookingsPage() {
               type="text"
               placeholder="Search by customer or ID..."
               value={searchQuery}
-              onChange={(e) => setSearchQuery(e.target.value)}
+              onChange={(e) => {
+                setSearchQuery(e.target.value);
+                setPage(1);
+              }}
               className="w-full text-xs bg-white border border-slate-200 rounded-xl px-3 py-2 pl-8 outline-none focus:border-brand-royal"
             />
             <Search className="w-3.5 h-3.5 text-slate-400 absolute left-2.5 top-2.5" />
@@ -197,13 +190,13 @@ export default function ProviderBookingsPage() {
           <div className="text-center py-16 text-xs text-slate-500 font-semibold">
             Loading assigned jobs...
           </div>
-        ) : filteredBookings.length === 0 ? (
+        ) : bookings.length === 0 ? (
           <Card className="p-12 text-center border-dashed border-slate-300">
             <p className="text-xs text-slate-500">No jobs found under this category.</p>
           </Card>
         ) : (
           <div className="space-y-4">
-            {filteredBookings.map((b) => {
+            {bookings.map((b) => {
               const isAssigned = ['assigned', 'confirmed', 'pending'].includes(b.booking_status);
               const isInProgress = b.booking_status === 'in_progress';
               const isCompleted = b.booking_status === 'completed';
@@ -322,6 +315,14 @@ export default function ProviderBookingsPage() {
             })}
           </div>
         )}
+
+        <Pagination
+          currentPage={page}
+          totalPages={totalPages}
+          totalItems={totalCount}
+          pageSize={pageSize}
+          onPageChange={(p) => setPage(p)}
+        />
 
       </div>
 

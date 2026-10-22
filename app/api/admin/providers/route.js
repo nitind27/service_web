@@ -46,12 +46,14 @@ export async function GET(request) {
       [...params, limit, offset]
     );
 
-    return apiSuccess({ providers }, 'Providers list', 200, {
+    const meta = {
       page,
       limit,
       total,
       totalPages: Math.ceil(total / limit) || 1,
-    });
+    };
+
+    return apiSuccess({ providers, ...meta }, 'Providers list', 200, meta);
   } catch (error) {
     console.error('Admin providers error:', error);
     return apiError('Failed to fetch providers', 500);

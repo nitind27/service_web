@@ -28,6 +28,7 @@ import { useAuth } from '@/lib/context/AuthContext';
 import BookingChatModal from '@/components/common/BookingChatModal';
 import LiveTrackingModal from '@/components/common/LiveTrackingModal';
 import WarrantyClaimModal from '@/components/common/WarrantyClaimModal';
+import Pagination from '@/components/ui/Pagination';
 import { formatCurrency, formatDate } from '@/lib/utils';
 
 export default function UserBookingsPage() {
@@ -37,6 +38,10 @@ export default function UserBookingsPage() {
   const [loading, setLoading] = useState(true);
   const [activeTab, setActiveTab] = useState('all');
   const [searchQuery, setSearchQuery] = useState('');
+  const [page, setPage] = useState(1);
+  const [totalPages, setTotalPages] = useState(1);
+  const [totalCount, setTotalCount] = useState(0);
+  const pageSize = 10;
 
   // Live chat modal state
   const [chatModalOpen, setChatModalOpen] = useState(false);
@@ -63,44 +68,36 @@ export default function UserBookingsPage() {
   const [warrantyModalOpen, setWarrantyModalOpen] = useState(false);
   const [warrantyBooking, setWarrantyBooking] = useState(null);
 
-  const fetchBookings = useCallback(async () => {
+  const fetchBookings = useCallback(async (targetPage = page, tab = activeTab, query = searchQuery) => {
     setLoading(true);
     try {
-      const res = await fetch('/api/bookings?limit=50');
+      const params = new URLSearchParams({
+        page: String(targetPage),
+        limit: String(pageSize),
+      });
+      if (tab && tab !== 'all') params.append('status', tab);
+      if (query && query.trim()) params.append('q', query.trim());
+
+      const res = await fetch(`/api/bookings?${params.toString()}`);
       const data = await res.json();
       if (data.success) {
         setBookings(data.data.bookings || []);
+        setTotalPages(data.meta?.totalPages || data.data?.totalPages || 1);
+        setTotalCount(data.meta?.total || data.data?.total || 0);
       }
     } catch (err) {
       console.error('Error fetching bookings:', err);
     } finally {
       setLoading(false);
     }
-  }, []);
+  }, [page, activeTab, searchQuery, pageSize]);
 
   useEffect(() => {
     fetchBookings();
   }, [fetchBookings]);
 
-  // Tab Filtering
-  const filteredBookings = bookings.filter((b) => {
-    if (activeTab === 'active') {
-      if (!['pending', 'confirmed', 'assigned', 'in_progress'].includes(b.booking_status)) return false;
-    } else if (activeTab === 'completed') {
-      if (b.booking_status !== 'completed') return false;
-    } else if (activeTab === 'cancelled') {
-      if (b.booking_status !== 'cancelled') return false;
-    }
-
-    if (searchQuery.trim()) {
-      const q = searchQuery.toLowerCase();
-      const matchNum = b.booking_number?.toLowerCase().includes(q);
-      const matchTitle = b.service_title?.toLowerCase().includes(q);
-      if (!matchNum && !matchTitle) return false;
-    }
-
-    return true;
-  });
+  // Bookings list (server-side paginated and filtered)
+  const filteredBookings = bookings;
 
   // Handle Review Submission
   const handleSubmitReview = async () => {
@@ -187,7 +184,10 @@ export default function UserBookingsPage() {
               },
             ]}
             activeTab={activeTab}
-            onChange={(tabId) => setActiveTab(tabId)}
+            onChange={(tabId) => {
+              setActiveTab(tabId);
+              setPage(1);
+            }}
           />
 
           <div className="relative w-full sm:w-64">
@@ -195,7 +195,10 @@ export default function UserBookingsPage() {
               type="text"
               placeholder="Search by ID or service..."
               value={searchQuery}
-              onChange={(e) => setSearchQuery(e.target.value)}
+              onChange={(e) => {
+                setSearchQuery(e.target.value);
+                setPage(1);
+              }}
               className="w-full text-xs bg-white border border-slate-200 rounded-xl px-3 py-2 pl-8 outline-none focus:border-brand-royal"
             />
             <Search className="w-3.5 h-3.5 text-slate-400 absolute left-2.5 top-2.5" />
@@ -387,6 +390,18 @@ export default function UserBookingsPage() {
               );
             })}
           </div>
+        )}
+
+        {/* Server-Side Pagination Bar */}
+        {!loading && bookings.length > 0 && (
+          <Pagination
+            currentPage={page}
+            totalPages={totalPages}
+            totalItems={totalCount}
+            pageSize={pageSize}
+            onPageChange={(newPage) => setPage(newPage)}
+            className="rounded-2xl border border-slate-200 shadow-soft"
+          />
         )}
 
       </div>

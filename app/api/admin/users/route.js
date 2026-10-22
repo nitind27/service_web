@@ -43,12 +43,14 @@ export async function GET(request) {
       [...params, limit, offset]
     );
 
-    return apiSuccess({ users }, 'Users list', 200, {
+    const meta = {
       page,
       limit,
       total,
       totalPages: Math.ceil(total / limit) || 1,
-    });
+    };
+
+    return apiSuccess({ users, ...meta }, 'Users list', 200, meta);
   } catch (error) {
     console.error('Admin users error:', error);
     return apiError('Failed to fetch users', 500);

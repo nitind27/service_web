@@ -10,6 +10,7 @@ import Modal from '@/components/ui/Modal';
 import Input from '@/components/ui/Input';
 import Select from '@/components/ui/Select';
 import Textarea from '@/components/ui/Textarea';
+import Pagination from '@/components/ui/Pagination';
 import { useToast } from '@/components/ui/Toast';
 import { formatCurrency } from '@/lib/utils';
 
@@ -20,6 +21,10 @@ export default function AdminServicesPage() {
   const [loading, setLoading] = useState(true);
   const [searchQuery, setSearchQuery] = useState('');
   const [categoryFilter, setCategoryFilter] = useState('');
+  const [page, setPage] = useState(1);
+  const [totalPages, setTotalPages] = useState(1);
+  const [totalCount, setTotalCount] = useState(0);
+  const pageSize = 10;
 
   // Add Service Modal
   const [modalOpen, setModalOpen] = useState(false);
@@ -34,21 +39,32 @@ export default function AdminServicesPage() {
   const [isFeatured, setIsFeatured] = useState(false);
   const [submitting, setSubmitting] = useState(false);
 
-  const fetchCatalog = useCallback(async () => {
+  const fetchCatalog = useCallback(async (targetPage = page, cat = categoryFilter, query = searchQuery) => {
     setLoading(true);
     try {
+      const params = new URLSearchParams({
+        page: String(targetPage),
+        limit: String(pageSize),
+      });
+      if (cat) params.append('category', cat);
+      if (query && query.trim()) params.append('q', query.trim());
+
       const [sRes, cRes] = await Promise.all([
-        fetch('/api/services?limit=100'),
+        fetch(`/api/services?${params.toString()}`),
         fetch('/api/categories'),
       ]);
       const sData = await sRes.json();
       const cData = await cRes.json();
 
-      if (sData.success) setServices(sData.data.services || []);
+      if (sData.success) {
+        setServices(sData.data.services || []);
+        setTotalPages(sData.meta?.totalPages || sData.data?.totalPages || 1);
+        setTotalCount(sData.meta?.total || sData.data?.total || 0);
+      }
       if (cData.success) {
         setCategories(cData.data.categories || []);
         if (cData.data.categories?.length > 0) {
-          setCategoryId(String(cData.data.categories[0].id));
+          setCategoryId((prev) => prev || String(cData.data.categories[0].id));
         }
       }
     } catch (err) {
@@ -56,7 +72,7 @@ export default function AdminServicesPage() {
     } finally {
       setLoading(false);
     }
-  }, []);
+  }, [page, categoryFilter, searchQuery, pageSize]);
 
   useEffect(() => {
     fetchCatalog();
@@ -103,25 +119,13 @@ export default function AdminServicesPage() {
     }
   };
 
-  const filtered = services.filter((s) => {
-    if (categoryFilter && s.category_slug !== categoryFilter) return false;
-    if (searchQuery.trim()) {
-      const q = searchQuery.toLowerCase();
-      return (
-        s.title?.toLowerCase().includes(q) ||
-        s.category_name?.toLowerCase().includes(q)
-      );
-    }
-    return true;
-  });
-
   return (
     <DashboardLayout title="Master Services Catalog">
       <div className="space-y-6">
         
         <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
           <div>
-            <h2 className="text-base font-bold text-slate-900">All Marketplace Services ({services.length})</h2>
+            <h2 className="text-base font-bold text-slate-900">All Marketplace Services ({totalCount})</h2>
             <p className="text-xs text-slate-500">Configure catalog services, prices, variants, and featured items.</p>
           </div>
           <Button variant="accent" size="sm" icon={Plus} onClick={() => setModalOpen(true)}>
@@ -132,7 +136,10 @@ export default function AdminServicesPage() {
         <div className="flex flex-col sm:flex-row items-center justify-between gap-4">
           <select
             value={categoryFilter}
-            onChange={(e) => setCategoryFilter(e.target.value)}
+            onChange={(e) => {
+              setCategoryFilter(e.target.value);
+              setPage(1);
+            }}
             className="w-full sm:w-64 bg-white border border-slate-200 text-xs font-bold text-slate-800 rounded-xl px-3 py-2 shadow-xs outline-none"
           >
             <option value="">All Categories</option>
@@ -146,7 +153,10 @@ export default function AdminServicesPage() {
               type="text"
               placeholder="Search service title..."
               value={searchQuery}
-              onChange={(e) => setSearchQuery(e.target.value)}
+              onChange={(e) => {
+                setSearchQuery(e.target.value);
+                setPage(1);
+              }}
               className="w-full text-xs bg-white border border-slate-200 rounded-xl px-3 py-2 pl-8 outline-none focus:border-brand-royal"
             />
             <Search className="w-3.5 h-3.5 text-slate-400 absolute left-2.5 top-2.5" />
@@ -154,55 +164,79 @@ export default function AdminServicesPage() {
         </div>
 
         <div className="bg-white rounded-2xl border border-slate-200 overflow-hidden shadow-soft">
-          <table className="w-full text-left text-xs">
-            <thead className="bg-slate-50 border-b border-slate-200 text-slate-500 font-bold uppercase tracking-wider">
-              <tr>
-                <th className="p-4">Service</th>
-                <th className="p-4">Category</th>
-                <th className="p-4">Pricing</th>
-                <th className="p-4">Duration</th>
-                <th className="p-4">Rating</th>
-                <th className="p-4">Featured</th>
-                <th className="p-4 text-right">Status</th>
-              </tr>
-            </thead>
-            <tbody className="divide-y divide-slate-100">
-              {filtered.map((s) => (
-                <tr key={s.id} className="hover:bg-slate-50/60 transition">
-                  <td className="p-4 font-bold text-slate-900 flex items-center gap-3">
-                    <img src={s.thumbnail} alt={s.title} className="w-10 h-10 rounded-xl object-cover border" />
-                    <div>
-                      <p className="line-clamp-1">{s.title}</p>
-                      <span className="text-[10px] text-slate-400">Slug: {s.slug}</span>
-                    </div>
-                  </td>
-                  <td className="p-4 text-slate-700 font-semibold">{s.category_name}</td>
-                  <td className="p-4">
-                    <span className="font-black text-slate-900">{formatCurrency(s.discount_price || s.base_price)}</span>
-                    {s.discount_price && (
-                      <span className="text-[10px] text-slate-400 line-through block">
-                        {formatCurrency(s.base_price)}
-                      </span>
-                    )}
-                  </td>
-                  <td className="p-4 text-slate-600 font-medium">~{s.duration_minutes}m</td>
-                  <td className="p-4 font-bold text-slate-800">★ {s.rating}</td>
-                  <td className="p-4">
-                    {s.is_featured === 1 ? (
-                      <Badge variant="orange" size="sm">Featured</Badge>
-                    ) : (
-                      <span className="text-slate-400">—</span>
-                    )}
-                  </td>
-                  <td className="p-4 text-right">
-                    <Badge variant={s.status === 'active' ? 'green' : 'gray'} size="sm">
-                      {s.status.toUpperCase()}
-                    </Badge>
-                  </td>
+          <div className="overflow-x-auto">
+            <table className="w-full text-left text-xs">
+              <thead className="bg-slate-50 border-b border-slate-200 text-slate-500 font-bold uppercase tracking-wider">
+                <tr>
+                  <th className="p-4">Service</th>
+                  <th className="p-4">Category</th>
+                  <th className="p-4">Pricing</th>
+                  <th className="p-4">Duration</th>
+                  <th className="p-4">Rating</th>
+                  <th className="p-4">Featured</th>
+                  <th className="p-4 text-right">Status</th>
                 </tr>
-              ))}
-            </tbody>
-          </table>
+              </thead>
+              <tbody className="divide-y divide-slate-100">
+                {loading ? (
+                  <tr>
+                    <td colSpan={7} className="p-8 text-center text-slate-400">
+                      Loading services catalog...
+                    </td>
+                  </tr>
+                ) : services.length === 0 ? (
+                  <tr>
+                    <td colSpan={7} className="p-8 text-center text-slate-400">
+                      No services found matching criteria.
+                    </td>
+                  </tr>
+                ) : (
+                  services.map((s) => (
+                    <tr key={s.id} className="hover:bg-slate-50/60 transition">
+                      <td className="p-4 font-bold text-slate-900 flex items-center gap-3">
+                        <img src={s.thumbnail} alt={s.title} className="w-10 h-10 rounded-xl object-cover border" />
+                        <div>
+                          <p className="line-clamp-1">{s.title}</p>
+                          <span className="text-[10px] text-slate-400">Slug: {s.slug}</span>
+                        </div>
+                      </td>
+                      <td className="p-4 text-slate-700 font-semibold">{s.category_name}</td>
+                      <td className="p-4">
+                        <span className="font-black text-slate-900">{formatCurrency(s.discount_price || s.base_price)}</span>
+                        {s.discount_price && (
+                          <span className="text-[10px] text-slate-400 line-through block">
+                            {formatCurrency(s.base_price)}
+                          </span>
+                        )}
+                      </td>
+                      <td className="p-4 text-slate-600 font-medium">~{s.duration_minutes}m</td>
+                      <td className="p-4 font-bold text-slate-800">★ {s.rating}</td>
+                      <td className="p-4">
+                        {s.is_featured === 1 ? (
+                          <Badge variant="orange" size="sm">Featured</Badge>
+                        ) : (
+                          <span className="text-slate-400">—</span>
+                        )}
+                      </td>
+                      <td className="p-4 text-right">
+                        <Badge variant={s.status === 'active' ? 'green' : 'gray'} size="sm">
+                          {s.status.toUpperCase()}
+                        </Badge>
+                      </td>
+                    </tr>
+                  ))
+                )}
+              </tbody>
+            </table>
+          </div>
+
+          <Pagination
+            currentPage={page}
+            totalPages={totalPages}
+            totalItems={totalCount}
+            pageSize={pageSize}
+            onPageChange={(p) => setPage(p)}
+          />
         </div>
 
       </div>

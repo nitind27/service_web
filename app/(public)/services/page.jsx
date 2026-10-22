@@ -392,6 +392,8 @@ function ServicesContent() {
               <Pagination
                 currentPage={currentPage}
                 totalPages={meta.totalPages}
+                totalItems={meta.total}
+                pageSize={meta.limit || 10}
                 onPageChange={(page) => setCurrentPage(page)}
               />
             </div>
