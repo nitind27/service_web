@@ -113,7 +113,7 @@ export default function WarrantyClaimModal({ isOpen, onClose, booking, onSuccess
         </div>
       ) : (
         <div className="space-y-5">
-          <div className="flex items-center gap-3 border-b border-slate-100 pb-3">
+          <div className="flex items-center gap-3 border-b border-slate-100 pb-3 pr-8">
             <div className="w-10 h-10 rounded-xl bg-emerald-100 text-emerald-700 flex items-center justify-center flex-shrink-0">
               <ShieldCheck className="w-6 h-6 text-emerald-600" />
             </div>

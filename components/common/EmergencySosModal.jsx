@@ -125,7 +125,7 @@ export default function EmergencySosModal({ isOpen, onClose }) {
         </div>
       ) : (
         <div className="space-y-5">
-          <div className="flex items-center gap-3 border-b border-slate-100 pb-3">
+          <div className="flex items-center gap-3 border-b border-slate-100 pb-3 pr-8">
             <div className="w-10 h-10 rounded-xl bg-red-600 text-white flex items-center justify-center flex-shrink-0 shadow-md">
               <ShieldAlert className="w-6 h-6 animate-pulse" />
             </div>
