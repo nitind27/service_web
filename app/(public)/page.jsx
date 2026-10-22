@@ -81,92 +81,181 @@ export default async function HomePage() {
   const { categories, featuredServices, testimonials, faqs } = await getHomePageData();
 
   const popularPills = [
-    { label: 'Deep Cleaning', query: 'Deep Cleaning' },
-    { label: 'AC Foam Servicing', query: 'AC' },
-    { label: 'Elder Care Attendant', query: 'Elder Care' },
-    { label: 'Electrician', query: 'Electrician' },
-    { label: 'Home Tutor', query: 'Tutor' },
-    { label: 'Wedding Photo', query: 'Photography' },
-    { label: 'Salon at Home', query: 'Salon' },
-    { label: 'Last Rites Support', query: 'Funeral' },
+    { label: 'Deep Cleaning', query: 'Deep Cleaning', icon: '🧹' },
+    { label: 'AC Foam Jet', query: 'AC', icon: '❄️' },
+    { label: 'Elder Attendant', query: 'Elder Care', icon: '👵' },
+    { label: 'Electrician', query: 'Electrician', icon: '⚡' },
+    { label: 'Home Tutor', query: 'Tutor', icon: '📚' },
+    { label: 'Wedding Photo', query: 'Photography', icon: '📸' },
+    { label: 'Salon at Home', query: 'Salon', icon: '✨' },
+    { label: 'Last Rites Support', query: 'Funeral', icon: '🕊️' },
   ];
 
   return (
     <div className="space-y-16 sm:space-y-24 pb-16">
       
-      {/* 1. HERO SECTION */}
-      <section className="relative overflow-hidden bg-gradient-to-b from-brand-50/80 via-white to-slate-50 pt-10 sm:pt-16 pb-12 sm:pb-20 border-b border-slate-200/60">
+      {/* 1. HERO SECTION (REDESIGNED FOR MAXIMUM APPEAL) */}
+      <section className="relative overflow-hidden bg-gradient-to-b from-blue-50/70 via-slate-50 to-white pt-12 sm:pt-20 pb-16 sm:pb-24 border-b border-slate-200/60">
+        
+        {/* Ambient Glow Orbs & Background Tech Grid */}
+        <div className="absolute top-0 left-1/4 w-[500px] h-[350px] bg-blue-400/15 rounded-full blur-3xl pointer-events-none" />
+        <div className="absolute top-12 right-10 w-[450px] h-[350px] bg-orange-400/15 rounded-full blur-3xl pointer-events-none" />
+        <div className="absolute inset-0 bg-[radial-gradient(#cbd5e1_1px,transparent_1px)] [background-size:24px_24px] opacity-40 pointer-events-none" />
+
+        {/* FLOATING GLASS CARDS ON SIDES (XL DESKTOP SCREENS) */}
+        {/* Left Floating Card 1: AC Jet Cleaning */}
+        <div className="hidden xl:flex absolute left-6 lg:left-12 top-28 z-10 bg-white/90 backdrop-blur-md p-3.5 rounded-2xl shadow-elevated border border-slate-200/80 items-center gap-3 animate-float max-w-[215px]">
+          <div className="w-10 h-10 rounded-xl bg-blue-50 text-brand-royal flex items-center justify-center font-bold text-lg flex-shrink-0">
+            ❄️
+          </div>
+          <div>
+            <p className="text-xs font-bold text-slate-900 leading-tight">AC Foam Power Jet</p>
+            <p className="text-[11px] text-emerald-600 font-black">₹699 • ⭐ 4.9 (420+)</p>
+            <span className="text-[9px] text-slate-400 block mt-0.5">Verified Technician</span>
+          </div>
+        </div>
+
+        {/* Left Floating Card 2: 15-Min Ambulance SOS */}
+        <div className="hidden xl:flex absolute left-10 lg:left-16 top-64 z-10 bg-white/90 backdrop-blur-md p-3.5 rounded-2xl shadow-elevated border border-slate-200/80 items-center gap-3 animate-float-delayed max-w-[225px]">
+          <div className="w-10 h-10 rounded-xl bg-red-50 text-red-600 flex items-center justify-center font-bold text-lg flex-shrink-0">
+            🚑
+          </div>
+          <div>
+            <div className="flex items-center gap-1.5">
+              <span className="w-2 h-2 rounded-full bg-red-500 animate-ping" />
+              <p className="text-xs font-black text-red-700 leading-tight">15-Min Rapid SOS</p>
+            </div>
+            <p className="text-[11px] text-slate-600 font-medium">Ambulance & Last Rites</p>
+            <span className="text-[9px] text-slate-400 block mt-0.5">24x7 Priority Dispatch</span>
+          </div>
+        </div>
+
+        {/* Right Floating Card 1: Certified Elder Nurse */}
+        <div className="hidden xl:flex absolute right-6 lg:right-12 top-28 z-10 bg-white/90 backdrop-blur-md p-3.5 rounded-2xl shadow-elevated border border-slate-200/80 items-center gap-3 animate-float-delayed max-w-[225px]">
+          <div className="w-10 h-10 rounded-xl bg-emerald-50 text-emerald-600 flex items-center justify-center font-bold text-lg flex-shrink-0">
+            👵
+          </div>
+          <div>
+            <div className="flex items-center gap-1">
+              <ShieldCheck className="w-3.5 h-3.5 text-emerald-600" />
+              <p className="text-xs font-bold text-slate-900 leading-tight">Elder Care Nurse</p>
+            </div>
+            <p className="text-[11px] text-emerald-700 font-black">Certified Vitals Care</p>
+            <span className="text-[9px] text-slate-400 block mt-0.5">100% Police Verified</span>
+          </div>
+        </div>
+
+        {/* Right Floating Card 2: 30-Day Guarantee */}
+        <div className="hidden xl:flex absolute right-10 lg:right-16 top-64 z-10 bg-white/90 backdrop-blur-md p-3.5 rounded-2xl shadow-elevated border border-slate-200/80 items-center gap-3 animate-float max-w-[215px]">
+          <div className="w-10 h-10 rounded-xl bg-amber-50 text-amber-600 flex items-center justify-center font-bold text-lg flex-shrink-0">
+            🛡️
+          </div>
+          <div>
+            <p className="text-xs font-bold text-slate-900 leading-tight">Jeevan Suraksha</p>
+            <p className="text-[11px] text-amber-700 font-black">30-Day Free Rework</p>
+            <span className="text-[9px] text-slate-400 block mt-0.5">Doorstep OTP Security</span>
+          </div>
+        </div>
+
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 relative z-10">
-          <div className="text-center max-w-3xl mx-auto space-y-5">
+          <div className="text-center max-w-4xl mx-auto space-y-6">
             
-            <div className="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full bg-blue-100/80 text-brand-royal text-xs font-bold border border-blue-200">
-              <Sparkles className="w-3.5 h-3.5 text-accent-500" />
-              <span>India’s 1st All-in-One Life Care Ecosystem</span>
+            {/* Top Pill */}
+            <div className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full bg-gradient-to-r from-blue-50 via-white to-amber-50 text-brand-royal text-xs font-bold border border-blue-200/80 shadow-2xs hover:scale-105 transition-transform cursor-default">
+              <Sparkles className="w-3.5 h-3.5 text-amber-500 animate-spin-slow" />
+              <span>India’s 1st Unified Life Care Ecosystem</span>
+              <span className="text-slate-300">•</span>
+              <span className="text-accent-600 font-extrabold">28+ States Active</span>
             </div>
 
-            <h1 className="text-3xl sm:text-5xl lg:text-6xl font-black text-slate-900 tracking-tight leading-[1.15]">
+            {/* Main Headline */}
+            <h1 className="text-3xl sm:text-5xl lg:text-6xl font-black text-slate-900 tracking-tight leading-[1.12]">
               Every Service You Need — <br className="hidden sm:inline" />
-              <span className="text-brand-royal">From Birth</span> to{' '}
-              <span className="text-accent-500">Beyond.</span>
+              <span className="text-transparent bg-clip-text bg-gradient-to-r from-brand-royal via-blue-700 to-indigo-800">
+                From Birth
+              </span>{' '}
+              to{' '}
+              <span className="text-transparent bg-clip-text bg-gradient-to-r from-accent-500 via-orange-500 to-amber-500">
+                Beyond.
+              </span>
             </h1>
 
-            <p className="text-sm sm:text-lg text-slate-600 max-w-2xl mx-auto leading-relaxed">
-              Book verified home technicians, elderly caretakers, tutors, wedding planners, CA consultants, and dignified sacred last rites. Seamless booking with upfront pricing.
+            {/* Subtitle */}
+            <p className="text-sm sm:text-lg text-slate-600 max-w-2xl mx-auto leading-relaxed font-normal">
+              Book verified doorstep technicians, elderly attendants, Vedic pandits, tutors, and dignified sacred last rites with transparent upfront pricing and 30-day warranty.
             </p>
 
             {/* Hero Search Box */}
-            <div className="pt-2 max-w-2xl mx-auto">
-              <form action="/services" method="GET" className="bg-white p-2 rounded-2xl sm:rounded-full shadow-elevated border border-slate-200 flex flex-col sm:flex-row items-center gap-2">
-                <div className="flex items-center gap-3 w-full px-3 py-2 flex-1">
-                  <Search className="w-5 h-5 text-accent-500 flex-shrink-0" />
+            <div className="pt-2 max-w-2xl sm:max-w-3xl mx-auto">
+              <form action="/services" method="GET" className="bg-white p-2 rounded-2xl sm:rounded-full shadow-2xl border-2 border-slate-200/90 focus-within:border-brand-royal focus-within:ring-4 focus-within:ring-blue-100 transition-all flex flex-col sm:flex-row items-center gap-2">
+                <div className="flex items-center gap-3 w-full px-4 py-2 flex-1">
+                  <div className="w-9 h-9 rounded-full bg-blue-50 text-brand-royal flex items-center justify-center flex-shrink-0">
+                    <Search className="w-4 h-4 text-brand-royal" />
+                  </div>
                   <input
                     type="text"
                     name="q"
-                    placeholder="Search any service (e.g. AC repair, elder care, cleaning)..."
-                    className="w-full text-sm font-medium text-slate-900 placeholder-slate-400 outline-none bg-transparent"
+                    placeholder="Search any service (e.g. AC Repair, Deep Cleaning, Elder Care, Pandit)..."
+                    className="w-full text-sm font-semibold text-slate-900 placeholder-slate-400 outline-none bg-transparent"
                   />
                 </div>
                 <button
                   type="submit"
-                  className="w-full sm:w-auto px-6 py-3 rounded-xl sm:rounded-full bg-accent-500 hover:bg-accent-600 text-white font-bold text-sm shadow-md transition-all flex items-center justify-center gap-2 flex-shrink-0"
+                  className="w-full sm:w-auto px-7 py-3.5 rounded-xl sm:rounded-full bg-gradient-to-r from-accent-500 to-orange-500 hover:from-accent-600 hover:to-orange-600 text-white font-black text-sm shadow-md hover:shadow-lg transition-all flex items-center justify-center gap-2 flex-shrink-0"
                 >
                   <span>Search Services</span>
                   <ArrowRight className="w-4 h-4" />
                 </button>
               </form>
 
-              {/* Popular Search Pills */}
+              {/* Popular Search Pills with colorful micro-icons */}
               <div className="flex flex-wrap items-center justify-center gap-2 pt-4">
-                <span className="text-xs text-slate-400 font-semibold">Popular:</span>
+                <span className="text-xs text-slate-400 font-bold uppercase tracking-wider">Popular:</span>
                 {popularPills.map((pill) => (
                   <Link
                     key={pill.label}
                     href={`/services?q=${encodeURIComponent(pill.query)}`}
-                    className="text-xs font-semibold px-3 py-1 rounded-full bg-white text-slate-700 border border-slate-200 hover:border-brand-royal hover:text-brand-royal hover:shadow-xs transition"
+                    className="text-xs font-bold px-3.5 py-1.5 rounded-full bg-white text-slate-700 border border-slate-200 hover:border-brand-royal hover:text-brand-royal hover:shadow-xs hover:scale-105 transition-all flex items-center gap-1.5"
                   >
-                    {pill.label}
+                    <span>{pill.icon}</span>
+                    <span>{pill.label}</span>
                   </Link>
                 ))}
               </div>
             </div>
 
-            {/* Quick Hero Stats */}
-            <div className="pt-6 grid grid-cols-2 sm:grid-cols-4 gap-4 max-w-3xl mx-auto border-t border-slate-200/80">
-              <div className="text-center">
-                <p className="text-xl sm:text-2xl font-black text-brand-royal">100%</p>
-                <p className="text-xs font-semibold text-slate-500">Verified Partners</p>
+            {/* Upgraded Hero Stats Bar to Floating Glass Cards */}
+            <div className="pt-8 grid grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4 max-w-4xl mx-auto">
+              <div className="p-4 rounded-2xl bg-white/90 backdrop-blur-sm border border-slate-200/80 shadow-soft hover:shadow-elevated transition-all text-center group">
+                <div className="w-8 h-8 rounded-xl bg-emerald-50 text-emerald-600 flex items-center justify-center mx-auto mb-2 group-hover:scale-110 transition-transform">
+                  <ShieldCheck className="w-4 h-4 text-emerald-600" />
+                </div>
+                <p className="text-xl sm:text-2xl font-black text-slate-900">100%</p>
+                <p className="text-xs font-bold text-slate-500">Police & Skill Verified</p>
               </div>
-              <div className="text-center">
-                <p className="text-xl sm:text-2xl font-black text-brand-royal">4.9 ★</p>
-                <p className="text-xs font-semibold text-slate-500">Customer Rating</p>
+
+              <div className="p-4 rounded-2xl bg-white/90 backdrop-blur-sm border border-slate-200/80 shadow-soft hover:shadow-elevated transition-all text-center group">
+                <div className="w-8 h-8 rounded-xl bg-amber-50 text-amber-600 flex items-center justify-center mx-auto mb-2 group-hover:scale-110 transition-transform">
+                  <Star className="w-4 h-4 fill-amber-400 text-amber-400" />
+                </div>
+                <p className="text-xl sm:text-2xl font-black text-slate-900">4.92 ★</p>
+                <p className="text-xs font-bold text-slate-500">12,800+ User Reviews</p>
               </div>
-              <div className="text-center">
-                <p className="text-xl sm:text-2xl font-black text-brand-royal">30 Days</p>
-                <p className="text-xs font-semibold text-slate-500">Service Guarantee</p>
+
+              <div className="p-4 rounded-2xl bg-white/90 backdrop-blur-sm border border-slate-200/80 shadow-soft hover:shadow-elevated transition-all text-center group">
+                <div className="w-8 h-8 rounded-xl bg-blue-50 text-brand-royal flex items-center justify-center mx-auto mb-2 group-hover:scale-110 transition-transform">
+                  <CheckCircle2 className="w-4 h-4 text-brand-royal" />
+                </div>
+                <p className="text-xl sm:text-2xl font-black text-slate-900">30 Days</p>
+                <p className="text-xs font-bold text-slate-500">Free Rework Guarantee</p>
               </div>
-              <div className="text-center">
-                <p className="text-xl sm:text-2xl font-black text-brand-royal">24x7</p>
-                <p className="text-xs font-semibold text-slate-500">Emergency Support</p>
+
+              <div className="p-4 rounded-2xl bg-white/90 backdrop-blur-sm border border-slate-200/80 shadow-soft hover:shadow-elevated transition-all text-center group">
+                <div className="w-8 h-8 rounded-xl bg-red-50 text-red-600 flex items-center justify-center mx-auto mb-2 group-hover:scale-110 transition-transform">
+                  <Clock className="w-4 h-4 text-red-600" />
+                </div>
+                <p className="text-xl sm:text-2xl font-black text-red-600">15 Mins</p>
+                <p className="text-xs font-bold text-slate-500">Emergency SOS Dispatch</p>
               </div>
             </div>
 
